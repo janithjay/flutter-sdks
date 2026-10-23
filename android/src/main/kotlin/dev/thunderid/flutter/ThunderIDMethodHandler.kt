@@ -155,6 +155,19 @@ class ThunderIDMethodHandler(private val context: Context) {
                     client.updateUserCredentials(attribute, newValue)
                     result.success(null)
                 }
+                "getUserSessions" -> {
+                    val limit = (args["limit"] as? Number)?.toInt()
+                    val offset = (args["offset"] as? Number)?.toInt()
+                    result.success(encodeSessionList(client.getUserSessions(limit, offset)))
+                }
+                "revokeUserSession" -> {
+                    client.revokeUserSession(args["sessionId"] as? String ?: "")
+                    result.success(null)
+                }
+                "revokeUserSessions" -> {
+                    client.revokeUserSessions(exceptCurrent = args["exceptCurrent"] as? Boolean ?: false)
+                    result.success(null)
+                }
                 "getFlowMeta" -> {
                     val appId = args["applicationId"] as? String ?: ""
                     val language = args["language"] as? String ?: "en-US"
@@ -271,6 +284,35 @@ class ThunderIDMethodHandler(private val context: Context) {
         "attributes" to profile.attributes,
         "display" to profile.display,
         "isReadOnly" to profile.isReadOnly,
+    )
+
+    private fun encodeSessionList(page: SSOSessionListResponse) = mapOf(
+        "totalResults" to page.totalResults,
+        "startIndex" to page.startIndex,
+        "count" to page.count,
+        "sessions" to page.sessions.map { session ->
+            mapOf(
+                "id" to session.id,
+                "userId" to session.userId,
+                "authenticatedAt" to session.authenticatedAt,
+                "createdAt" to session.createdAt,
+                "lastActiveAt" to session.lastActiveAt,
+                "absoluteExpiresAt" to session.absoluteExpiresAt,
+                "idleExpiresAt" to session.idleExpiresAt,
+                "creationIp" to session.creationIp,
+                "lastActiveIp" to session.lastActiveIp,
+                "userAgent" to session.userAgent,
+                "isCurrent" to session.isCurrent,
+                "participants" to session.participants.map {
+                    mapOf(
+                        "appId" to it.appId,
+                        "appName" to it.appName,
+                        "firstJoinedAt" to it.firstJoinedAt,
+                        "lastActiveAt" to it.lastActiveAt,
+                    )
+                },
+            )
+        },
     )
 
     private fun encodeAttributeSchema(schema: AttributeSchema): Map<String, Any?> = mapOf(

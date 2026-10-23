@@ -120,6 +120,21 @@ final class ThunderIDMethodHandler {
                 try await client.updateUserCredentials(attribute: attribute, newValue: newValue)
                 result(nil)
 
+            case "getUserSessions":
+                let page = try await client.getUserSessions(
+                    limit: (args["limit"] as? NSNumber)?.intValue,
+                    offset: (args["offset"] as? NSNumber)?.intValue
+                )
+                result(encodeSessionList(page))
+
+            case "revokeUserSession":
+                try await client.revokeUserSession(sessionId: args["sessionId"] as? String ?? "")
+                result(nil)
+
+            case "revokeUserSessions":
+                try await client.revokeUserSessions(exceptCurrent: args["exceptCurrent"] as? Bool ?? false)
+                result(nil)
+
             case "getFlowMeta":
                 let appId = args["applicationId"] as? String ?? ""
                 let language = args["language"] as? String ?? "en-US"
@@ -297,6 +312,37 @@ final class ThunderIDMethodHandler {
             "attributes": profile.attributes.mapValues { unwrapClaim($0.value) },
             "display": profile.display,
             "isReadOnly": profile.isReadOnly
+        ]
+    }
+
+    private func encodeSessionList(_ page: SSOSessionListResponse) -> [String: Any?] {
+        [
+            "totalResults": page.totalResults,
+            "startIndex": page.startIndex,
+            "count": page.count,
+            "sessions": page.sessions.map { session -> [String: Any?] in
+                [
+                    "id": session.id,
+                    "userId": session.userId,
+                    "authenticatedAt": session.authenticatedAt,
+                    "createdAt": session.createdAt,
+                    "lastActiveAt": session.lastActiveAt,
+                    "absoluteExpiresAt": session.absoluteExpiresAt,
+                    "idleExpiresAt": session.idleExpiresAt,
+                    "creationIp": session.creationIp,
+                    "lastActiveIp": session.lastActiveIp,
+                    "userAgent": session.userAgent,
+                    "isCurrent": session.isCurrent,
+                    "participants": session.participants.map { participant -> [String: Any?] in
+                        [
+                            "appId": participant.appId,
+                            "appName": participant.appName,
+                            "firstJoinedAt": participant.firstJoinedAt,
+                            "lastActiveAt": participant.lastActiveAt
+                        ]
+                    }
+                ]
+            }
         ]
     }
 

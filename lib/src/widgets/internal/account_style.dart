@@ -234,16 +234,22 @@ class ThunderPillButton extends StatelessWidget {
   final String identifier;
   final VoidCallback? onPressed;
 
+  /// Replaces the pill's dark fill, for example with the error color for an action that signs
+  /// something out.
+  final Color? background;
+
   const ThunderPillButton({
     super.key,
     required this.label,
     required this.identifier,
     required this.onPressed,
+    this.background,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = ThunderAccountColors.of(context);
+    final fill = background ?? colors.pillBackground;
     return Expanded(
       child: Semantics(
         identifier: identifier,
@@ -253,9 +259,9 @@ class ThunderPillButton extends StatelessWidget {
             key: Key(identifier),
             onPressed: onPressed,
             style: ElevatedButton.styleFrom(
-              backgroundColor: colors.pillBackground,
+              backgroundColor: fill,
               foregroundColor: colors.pillText,
-              disabledBackgroundColor: colors.pillBackground.withValues(alpha: 0.4),
+              disabledBackgroundColor: fill.withValues(alpha: 0.4),
               disabledForegroundColor: colors.pillText.withValues(alpha: 0.7),
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -435,35 +441,7 @@ class ThunderAccountEditPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // The chevron glyph carries its own built-in padding, so its box's left
-                      // edge doesn't line up with the title/description below it. Shifting the
-                      // whole control left compensates, rather than a negative Padding, which
-                      // Flutter rejects.
-                      Transform.translate(
-                        offset: const Offset(-6, 0),
-                        child: InkWell(
-                          onTap: onCancel,
-                          borderRadius: BorderRadius.circular(8),
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 6, bottom: 6, right: 8),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.chevron_left, color: colors.text, size: 26),
-                                const SizedBox(width: 2),
-                                Text(
-                                  backLabel,
-                                  style: TextStyle(
-                                    color: colors.text,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                      ThunderAccountBackLink(label: backLabel, onTap: onCancel),
                       const SizedBox(height: 4),
                       Text(
                         title,
@@ -512,4 +490,101 @@ class ThunderAccountEditPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The back chevron and the name of the page it returns to, at the top of every pushed account
+/// page.
+class ThunderAccountBackLink extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const ThunderAccountBackLink({super.key, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = ThunderAccountColors.of(context);
+    // The chevron glyph carries its own built-in padding, so its box's left edge doesn't line up
+    // with the title/description below it. Shifting the whole control left compensates, rather
+    // than a negative Padding, which Flutter rejects.
+    return Transform.translate(
+      offset: const Offset(-6, 0),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 6, right: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.chevron_left, color: colors.text, size: 26),
+              const SizedBox(width: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  color: colors.text,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A confirmation in the account pages' own look: a title, a message, and Cancel beside the
+/// action, laid out like an edit page's Cancel and Save row. Resolves to whether the action was
+/// chosen; dismissing it counts as Cancel.
+Future<bool> showThunderAccountConfirmation(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String cancelLabel,
+  required String confirmLabel,
+  required String cancelIdentifier,
+  required String confirmIdentifier,
+  bool destructive = false,
+}) async {
+  final colors = ThunderAccountColors.of(context);
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => Dialog(
+      backgroundColor: colors.pageBackground,
+      surfaceTintColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: colors.text)),
+            const SizedBox(height: 10),
+            Text(message, style: TextStyle(fontSize: 14, color: colors.textSecondary, height: 1.4)),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                ThunderOutlineButton(
+                  label: cancelLabel,
+                  identifier: cancelIdentifier,
+                  onPressed: () => Navigator.of(context).pop(false),
+                ),
+                const SizedBox(width: 10),
+                ThunderPillButton(
+                  label: confirmLabel,
+                  identifier: confirmIdentifier,
+                  background: destructive ? colors.error : null,
+                  onPressed: () => Navigator.of(context).pop(true),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  return confirmed ?? false;
 }

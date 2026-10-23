@@ -69,6 +69,40 @@ const Map<String, String> thunderDefaultStrings = {
   'createOrganization.name': 'Organization name',
   'createOrganization.submit': 'Create',
 
+  // Active sessions
+  'activeSessions.section': 'Active sessions',
+  'activeSessions.title': 'Your sessions',
+  'activeSessions.loading': 'Loading sessions\u2026',
+  'activeSessions.empty': 'No active sessions.',
+  'activeSessions.manage': 'Manage sessions',
+  'activeSessions.footnote': "Sessions are grouped by operating system. Revoke any you don't recognize.",
+  'activeSessions.group.one': '1 session on {os}',
+  'activeSessions.group.other': '{count} sessions on {os}',
+  'activeSessions.device': '{client} on {place}',
+  'activeSessions.unknownDevice': 'Unknown device',
+  'activeSessions.unknownBrowser': 'Unknown browser',
+  'activeSessions.unknown': 'Unknown',
+  'activeSessions.current': 'This device',
+  'activeSessions.lastActive.since': 'Last active {date}',
+  'activeSessions.ip': 'IP address',
+  'activeSessions.signedIn': 'Signed in',
+  'activeSessions.lastActive': 'Last active',
+  'activeSessions.applications': 'Applications',
+  'activeSessions.revoke': 'Revoke',
+  'activeSessions.revokeOthers': 'Revoke all other sessions',
+  'activeSessions.revokeOthers.note': "You'll stay signed in on this device.",
+  'activeSessions.current.note': "You're using this session now. To end it, sign out from the app.",
+  'activeSessions.confirm.one.title': 'Revoke this session?',
+  'activeSessions.confirm.one.body': '{device} will need to sign in again to access your account.',
+  'activeSessions.confirm.others.title': 'Revoke other sessions?',
+  'activeSessions.confirm.others.body.one':
+      "1 other session will be revoked. You'll stay signed in on this device.",
+  'activeSessions.confirm.others.body.other':
+      "{count} other sessions will be revoked. You'll stay signed in on this device.",
+  'activeSessions.cancel': 'Cancel',
+  'activeSessions.error.load': 'An error occurred while loading your sessions. Please try again.',
+  'activeSessions.error.revoke': 'An error occurred while revoking the session. Please try again.',
+
   // Language switcher
   'languageSwitcher.label': 'Language',
 

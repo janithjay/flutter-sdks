@@ -5,6 +5,7 @@ import 'channel/thunderid_channel.dart';
 import 'models/flow_models.dart';
 import 'models/sign_in_options.dart';
 import 'models/sign_out_options.dart';
+import 'models/sso_session.dart';
 import 'models/thunderid_config.dart';
 import 'models/thunderid_error.dart';
 import 'models/token_exchange_config.dart';
@@ -277,6 +278,37 @@ class ThunderIDClient {
       'attribute': attribute,
       'newValue': newValue,
     });
+  }
+
+  // ── Sessions ──────────────────────────────────────────────────────────────
+
+  /// One page of the signed-in user's live SSO sessions, from `GET /sessions/me`, most recently
+  /// active first. The session that issued the access token has [SSOSession.isCurrent] set.
+  Future<SSOSessionListResponse> getUserSessions({int? limit, int? offset}) async {
+    _requireInitialized();
+    final result = await _channel.invokeMap('getUserSessions', {
+      if (limit != null) 'limit': limit,
+      if (offset != null) 'offset': offset,
+    });
+    return SSOSessionListResponse.fromMap(result);
+  }
+
+  /// Revokes one of the signed-in user's SSO sessions via `DELETE /sessions/me/{id}`. The server
+  /// signs it out and revokes the tokens its applications were issued. A session that is already
+  /// gone fails with [ThunderIDErrorCode.notFound].
+  Future<void> revokeUserSession(String sessionId) async {
+    _requireInitialized();
+    if (sessionId.trim().isEmpty) {
+      throw const IAMException(ThunderIDErrorCode.invalidInput, 'sessionId is required');
+    }
+    await _channel.invoke<void>('revokeUserSession', {'sessionId': sessionId});
+  }
+
+  /// Revokes the signed-in user's SSO sessions via `DELETE /sessions/me`. With [exceptCurrent], the
+  /// session that issued the access token is kept, so the user stays signed in.
+  Future<void> revokeUserSessions({bool exceptCurrent = false}) async {
+    _requireInitialized();
+    await _channel.invoke<void>('revokeUserSessions', {'exceptCurrent': exceptCurrent});
   }
 
   // ── Flow Meta ─────────────────────────────────────────────────────────────
